@@ -136,10 +136,6 @@ contract MerlinStarterPublicSale is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address;
 
-    address public constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
-    string private _name = "MerlinStarterPublicSale";
-    string private _symbol = "MerlinStarterPublicSale";
-
     IERC20 public oriToken;
     IERC20 public rewardToken;
 
@@ -150,7 +146,7 @@ contract MerlinStarterPublicSale is Ownable, ReentrancyGuard {
     bool public mbStart=false;
     bool public mbWhiteAddr=false;
     uint256 public startTime=0;
-    uint256 public dt=60*60;
+    uint256 public dt=2*24*3600;
     uint256 public chaimDt1=0;
     uint256 public chaimDt2=0;
     uint256 public chaimDt3=0;
@@ -178,22 +174,15 @@ contract MerlinStarterPublicSale is Ownable, ReentrancyGuard {
         stakeAmount=8*10**17;
         rewardAmount=40000000*10**18;
 
-        chaimDt1=dt + 24*3600+ 3600;
-        chaimDt2=chaimDt1 + 30*24*3600;
-        chaimDt3=chaimDt1 + 60*24*3600;
+        chaimDt1=dt + 3*3600;
+        chaimDt2=chaimDt1 + 0*24*3600;
+        chaimDt3=chaimDt1 + 0*24*3600;
 
         oriToken = IERC20(0x1404F3890b36fFce7462c8A88045f28377f425DA);
         rewardToken = IERC20(0x16F91ec24A9AED8e7557d0D7CC25c576D562ef07);
     }
     
     /* ========== VIEWS ========== */
-    function name() public view returns (string memory) {
-        return _name;
-    }
-    function symbol() public view returns (string memory) {
-        return _symbol;
-    }
-
     function sumCount() external view returns(uint256){
         return _sumCount;
     }
@@ -362,7 +351,7 @@ contract MerlinStarterPublicSale is Ownable, ReentrancyGuard {
         expectedAmount = expectedAmount.mul(coe).div(100);
 
         expectedAmount = expectedAmount.mul(10**18).div(joinIdoPrice);
-        if(expectedAmount>0)rewardToken.safeTransferFrom(address(this), _msgSender(),expectedAmount);
+        if(expectedAmount>0)rewardToken.safeTransfer( _msgSender(),expectedAmount);
     }
     //claim btc
     function claimBTC() external nonReentrant{
@@ -375,28 +364,43 @@ contract MerlinStarterPublicSale is Ownable, ReentrancyGuard {
         uint256 expectedAmount = getExpectedAmount(_msgSender());
         uint256 refundAmount = _balance[_msgSender()].sub(expectedAmount);
         _bClaimBTC[_msgSender()]=true;
-        if(refundAmount>0) oriToken.safeTransferFrom(address(this), _msgSender(),refundAmount);
+        if(refundAmount>0) oriToken.safeTransfer( _msgSender(),refundAmount);
     }
     
     //---write onlyOwner---//
-   function setParameters(address oriTokenAddr,address rewardTokenAddr) external onlyOwner {
+   function setParameters(address oriTokenAddr,address rewardTokenAddr,
+                          uint256 joinIdoPrice0,uint256 stakeAmount0,uint256 rewardAmount0
+   ) external onlyOwner {
+        require(!mbStart, "MerlinStarterPublicSale: already Start!");
         oriToken = IERC20(oriTokenAddr);
         rewardToken = IERC20(rewardTokenAddr);
+
+        joinIdoPrice=joinIdoPrice0;
+        stakeAmount=stakeAmount0;
+        rewardAmount=rewardAmount0;
     }
     function setStart(bool bstart) external onlyOwner{
         mbStart = bstart;
         startTime = block.timestamp;
     }
+    function setDt(uint256 tDt,uint256 tDt1,uint256 tDt2,uint256 tDt3) external onlyOwner{
+        dt = tDt;
+        chaimDt1 = tDt1;
+        chaimDt2 = tDt2;
+        chaimDt3 = tDt3;
+    }
     function setbWhiteAddr(bool bWhiteAddr) external onlyOwner{
+        require(!mbStart, "MerlinStarterPublicSale: already Start!");
         mbWhiteAddr = bWhiteAddr;
     }
+    address public mFundAddress = 0xb5aa8cFd8A6a023Dd5A318D5C71D15284f1550b4;
     function withdraw(uint256 amount) external onlyOwner{
         require(address(this).balance >= amount, "MerlinStarterPublicSale:Insufficient balance"); 
-        payable(_msgSender()).transfer(amount);
+        payable(mFundAddress).transfer(amount);
     }
     function withdrawToken(address tokenAddr,uint256 amount) external onlyOwner{ 
         IERC20 token = IERC20(tokenAddr);
-        token.safeTransferFrom(address(this),_msgSender(), amount);
+        token.safeTransfer(mFundAddress, amount);
     }
 
     function addWhiteAccount(address account) external onlyOwner{

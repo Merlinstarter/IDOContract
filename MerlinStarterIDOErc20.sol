@@ -136,10 +136,6 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address;
 
-    address public constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
-    string private _name = "MerlinStarterIDO";
-    string private _symbol = "MerlinStarterIDO";
-
     IERC20 public oriToken;
     IERC20 public rewardToken;
 
@@ -180,12 +176,6 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
     }
     
     /* ========== VIEWS ========== */
-    function name() public view returns (string memory) {
-        return _name;
-    }
-    function symbol() public view returns (string memory) {
-        return _symbol;
-    }
     function maxCount() external view returns(uint256){
         return _MaxCount;
     }
@@ -321,35 +311,47 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
         }
         require(coe>0, "MerlinStarterIDO: claim 0!");
         uint256 amount = rewardAmount.mul(coe).div(100);
-        rewardToken.safeTransferFrom(address(this),_msgSender(), amount);
+        rewardToken.safeTransfer(_msgSender(), amount);
     }
     //---write onlyOwner---//
-   function setParameters(address oriTokenAddr,address rewardTokenAddr) external onlyOwner {
+   function setParameters(address oriTokenAddr,address rewardTokenAddr,
+      uint256 joinIdoPrice0,uint256 maxCount0,uint256 rewardAmount0
+   ) external onlyOwner {
+        require(!mbStart, "MerlinStarterIDO: already Start!");
         oriToken = IERC20(oriTokenAddr);
         rewardToken = IERC20(rewardTokenAddr);
+        joinIdoPrice=joinIdoPrice0;
+        _MaxCount=maxCount0;
+        rewardAmount=rewardAmount0;
     }
     function setStartAlpha(bool bstart) external onlyOwner{
         mbStart = bstart;
         startTime = block.timestamp;
     }
-    
-    function withdraw(uint256 amount) external onlyOwner{
-        require(address(this).balance >= amount, "MerlinStarterIDO:Insufficient balance"); 
-        payable(_msgSender()).transfer(amount);
-    }
-    function withdrawToken(address tokenAddr,uint256 amount) external onlyOwner{ 
-        IERC20 token = IERC20(tokenAddr);
-        token.safeTransferFrom(address(this),_msgSender(), amount);
-    }
-
     function setStartStageBeta(bool bstart,address stage1Addr) external onlyOwner{
         MerlinStarterIDO tokenA = MerlinStarterIDO(stage1Addr);
         bool bEnd = tokenA.isAlreadyEnd();
         require(bEnd, "MerlinStarterIDO: need stage Alpha end!");
         mbStart = bstart;
         startTime = block.timestamp;
-        _MaxCount = 200 + tokenA.maxCount()-tokenA.sumCount();
+        _MaxCount = _MaxCount + tokenA.maxCount()-tokenA.sumCount();
     }
+    function setDt(uint256 tDt,uint256 tDt1,uint256 tDt2,uint256 tDt3) external onlyOwner{
+        dt = tDt;
+        chaimDt1 = tDt1;
+        chaimDt2 = tDt2;
+        chaimDt3 = tDt3;
+    }
+    address public mFundAddress = 0xb5aa8cFd8A6a023Dd5A318D5C71D15284f1550b4;
+    function withdraw(uint256 amount) external onlyOwner{
+        require(address(this).balance >= amount, "MerlinStarterIDO:Insufficient balance"); 
+        payable(mFundAddress).transfer(amount);
+    }
+    function withdrawToken(address tokenAddr,uint256 amount) external onlyOwner{ 
+        IERC20 token = IERC20(tokenAddr);
+        token.safeTransfer(mFundAddress, amount);
+    }
+
     function addWhiteAccount(address account) external onlyOwner{
         require(!_Is_WhiteAddrArr[account], "MerlinStarterIDO:Account is already in White list");
         _Is_WhiteAddrArr[account] = true;
