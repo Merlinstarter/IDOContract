@@ -174,7 +174,6 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
 
         oriToken = IERC20(0x1F113afE40bfCb3D208Bb2F0B941008463A1101A);
         rewardToken = IERC20(0x16F91ec24A9AED8e7557d0D7CC25c576D562ef07);
-        mFundAddress = 0x2EDDE6f6ec946CAbF1DC356cB88dE7589486B852;
     }
     
     /* ========== VIEWS ========== */

@@ -176,7 +176,6 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
         chaimDt3=chaimDt1+ 60*24*3600;
 
         rewardToken = IERC20(0x16F91ec24A9AED8e7557d0D7CC25c576D562ef07);
-        mFundAddress = 0x2EDDE6f6ec946CAbF1DC356cB88dE7589486B852;
     }
     
     /* ========== VIEWS ========== */
