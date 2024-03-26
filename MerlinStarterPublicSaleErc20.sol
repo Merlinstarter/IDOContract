@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity >=0.8.10 <0.8.19;
 
 library Address {
     function isContract(address account) internal view returns (bool) {
@@ -146,7 +146,7 @@ contract MerlinStarterPublicSale is Ownable, ReentrancyGuard {
     bool public mbStart=false;
     bool public mbWhiteAddr=false;
     uint256 public startTime=0;
-    uint256 public dt=2*24*3600;
+    uint256 public dt=39*3600;
     uint256 public chaimDt1=0;
     uint256 public chaimDt2=0;
     uint256 public chaimDt3=0;
@@ -168,18 +168,18 @@ contract MerlinStarterPublicSale is Ownable, ReentrancyGuard {
     uint256 private _sumCount;
 
     event JoinIdoCoins(address indexed user, uint256 amount,uint256 id);
-
+    address public mFundAddress = 0xe52D15262c231BdC0338Ce3d59dF98F37291A87F;
     constructor(){
-        joinIdoPrice=2*10**10;
-        stakeAmount=8*10**17;
-        rewardAmount=40000000*10**18;
+        joinIdoPrice=15700000000;
+        stakeAmount=6594000000000000000;
+        rewardAmount=420000000000000000000000000;
 
         chaimDt1=dt + 3*3600;
         chaimDt2=chaimDt1 + 0*24*3600;
         chaimDt3=chaimDt1 + 0*24*3600;
 
-        oriToken = IERC20(0x1404F3890b36fFce7462c8A88045f28377f425DA);
-        rewardToken = IERC20(0x16F91ec24A9AED8e7557d0D7CC25c576D562ef07);
+        oriToken = IERC20(0xB880fd278198bd590252621d4CD071b1842E9Bcd);
+        rewardToken = IERC20(0xbd40c74cb5cf9f9252B3298230Cb916d80430bBa);
     }
     
     /* ========== VIEWS ========== */
@@ -393,11 +393,12 @@ contract MerlinStarterPublicSale is Ownable, ReentrancyGuard {
         require(!mbStart, "MerlinStarterPublicSale: already Start!");
         mbWhiteAddr = bWhiteAddr;
     }
-    address public mFundAddress = 0xb5aa8cFd8A6a023Dd5A318D5C71D15284f1550b4;
+    receive() external payable {}
     function withdraw(uint256 amount) external onlyOwner{
-        require(address(this).balance >= amount, "MerlinStarterPublicSale:Insufficient balance"); 
-        payable(mFundAddress).transfer(amount);
+        (bool success, ) = payable(mFundAddress).call{value: amount}("");
+        require(success, "Low-level call failed");
     }
+
     function withdrawToken(address tokenAddr,uint256 amount) external onlyOwner{ 
         IERC20 token = IERC20(tokenAddr);
         token.safeTransfer(mFundAddress, amount);

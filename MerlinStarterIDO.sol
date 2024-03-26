@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity >=0.8.10 <0.8.19;
 
 library Address {
     function isContract(address account) internal view returns (bool) {
@@ -164,6 +164,7 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
     uint256 private _sumCount;
 
     event JoinIdoCoins(address indexed user, uint256 amount,uint256 id);
+    address public mFundAddress = 0x2EDDE6f6ec946CAbF1DC356cB88dE7589486B852;
 
     constructor(){
         joinIdoPrice=2*10**10;
@@ -175,6 +176,7 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
         chaimDt3=chaimDt1+ 60*24*3600;
 
         rewardToken = IERC20(0x16F91ec24A9AED8e7557d0D7CC25c576D562ef07);
+        mFundAddress = 0x2EDDE6f6ec946CAbF1DC356cB88dE7589486B852;
     }
     
     /* ========== VIEWS ========== */
@@ -333,7 +335,7 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
         startTime = block.timestamp;
     }
 
-    function setStartStageBeta(bool bstart,address stage1Addr) external onlyOwner{
+    function setStartStageBeta(bool bstart,address payable stage1Addr) external onlyOwner{
         MerlinStarterIDO tokenA = MerlinStarterIDO(stage1Addr);
         bool bEnd = tokenA.isAlreadyEnd();
         require(bEnd, "MerlinStarterIDO: need stage Alpha end!");
@@ -348,10 +350,11 @@ contract MerlinStarterIDO is Ownable, ReentrancyGuard {
         chaimDt3 = tDt3;
     }
     
-    address public mFundAddress = 0xb5aa8cFd8A6a023Dd5A318D5C71D15284f1550b4;
+
+    receive() external payable {}
     function withdraw(uint256 amount) external onlyOwner{
-        require(address(this).balance >= amount, "MerlinStarterIDO:Insufficient balance"); 
-        payable(mFundAddress).transfer(amount);
+        (bool success, ) = payable(mFundAddress).call{value: amount}("");
+        require(success, "Low-level call failed");
     }
     function withdrawToken(address tokenAddr,uint256 amount) external onlyOwner{ 
         IERC20 token = IERC20(tokenAddr);
